@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdk 28
+
+    defaultConfig {
+        applicationId "me.coffee.support.ocr"
+        minSdk 21
+        targetSdk 28
+        versionCode 1
+        versionName "1.0"
+
+        Properties properties = new Properties()
+        File proFile = file('../config.properties')
+        if (proFile.exists()) {
+            properties.load(new FileInputStream(proFile))
+            buildConfigField("String", "DB_AK", "\"" + properties.getProperty("ak") + "\"")
+            buildConfigField("String", "DB_SK", "\"" + properties.getProperty("sk") + "\"")
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:2.0.4'
+    implementation project(path: ':bdocr')
+}
