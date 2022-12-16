@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
+
 import me.xuan.bdocr.sdk.exception.OCRError;
 import me.xuan.bdocr.sdk.exception.SDKError;
 import me.xuan.bdocr.sdk.jni.JniInterface;
@@ -80,7 +81,7 @@ public class OCR {
     private String license = null;
     @SuppressLint({"StaticFieldLeak"})
     private Context context;
-//    private CrashReporterHandler crInst;
+    //    private CrashReporterHandler crInst;
     private static volatile OCR instance;
 
     public boolean isAutoCacheToken() {
@@ -100,7 +101,7 @@ public class OCR {
     public static OCR getInstance(Context ctx) {
         if (instance == null) {
             Class var1 = OCR.class;
-            synchronized(OCR.class) {
+            synchronized (OCR.class) {
                 if (instance == null) {
                     instance = new OCR(ctx);
                 }
@@ -245,10 +246,10 @@ public class OCR {
                     public void onResult(IDCardResult result) {
                         tempImage.delete();
                         if (listener != null) {
-                            if(result.isRecCorrect()){
+                            if (result.isRecCorrect()) {
                                 listener.onResult(result);
-                            }else{
-                                OCRError error = new OCRError(OCRError.ErrorCode.SERVICE_DATA_ERROR,"recg id card error " + result.getImageStatus());
+                            } else {
+                                OCRError error = new OCRError(OCRError.ErrorCode.SERVICE_DATA_ERROR, "recg id card error " + result.getImageStatus());
                                 listener.onError(error);
                             }
                         }
@@ -273,7 +274,7 @@ public class OCR {
     public void recognizeBankCard(final BankCardParams params, final OnResultListener<BankCardResult> listener) {
         File imageFile = params.getImageFile();
         final File tempImage = new File(this.context.getCacheDir(), String.valueOf(System.currentTimeMillis()));
-        ImageUtil.resize(imageFile.getAbsolutePath(), tempImage.getAbsolutePath(), IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT);
+        ImageUtil.resize(imageFile.getAbsolutePath(), tempImage.getAbsolutePath(), IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT, params.getImageQuality());
         params.setImageFile(tempImage);
         final Parser<BankCardResult> bankCardResultParser = new BankCardResultParser();
         this.getToken(new OnResultListener() {
@@ -282,10 +283,10 @@ public class OCR {
                     public void onResult(BankCardResult result) {
                         tempImage.delete();
                         if (listener != null) {
-                            if(result.isRecCorrect()){
+                            if (result.isRecCorrect()) {
                                 listener.onResult(result);
-                            }else{
-                                OCRError error = new OCRError(OCRError.ErrorCode.SERVICE_DATA_ERROR,"recg bank card error " + result.getBankCardType());
+                            } else {
+                                OCRError error = new OCRError(OCRError.ErrorCode.SERVICE_DATA_ERROR, "recg bank card error " + result.getBankCardType());
                                 listener.onError(error);
                             }
                         }
@@ -392,7 +393,9 @@ public class OCR {
         });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     @Deprecated
     public void initWithToken(Context context, AccessToken token) {
         this.init(context);
@@ -453,7 +456,7 @@ public class OCR {
     }
 
     public void initAccessToken(OnResultListener<AccessToken> listener, Context context) {
-        this.initAccessTokenImpl(listener, (String)null, context);
+        this.initAccessTokenImpl(listener, (String) null, context);
     }
 
     public void initAccessToken(OnResultListener<AccessToken> listener, String licenseFile, Context context) {

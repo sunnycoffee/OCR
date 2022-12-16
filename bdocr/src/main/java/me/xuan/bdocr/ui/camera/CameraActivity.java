@@ -25,10 +25,12 @@ import android.view.Surface;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+
 import me.xuan.bdocr.R;
 import me.xuan.bdocr.ShowLoadingInterface;
 import me.xuan.bdocr.sdk.OCR;
@@ -59,7 +61,6 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
     public static final String CONTENT_TYPE_PASSPORT = "passport";
 
 
-
     private static final int REQUEST_CODE_PICK_IMAGE = 100;
     private static final int PERMISSIONS_REQUEST_CAMERA = 800;
     private static final int PERMISSIONS_EXTERNAL_STORAGE = 801;
@@ -86,7 +87,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         @Override
         public boolean onRequestPermission() {
             ActivityCompat.requestPermissions(CameraActivity.this,
-                    new String[] {Manifest.permission.CAMERA},
+                    new String[]{Manifest.permission.CAMERA},
                     PERMISSIONS_REQUEST_CAMERA);
             return false;
         }
@@ -171,7 +172,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
             contentType = CONTENT_TYPE_GENERAL;
         }
 
-        isAutoRecg = getIntent().getBooleanExtra(KEY_AUTO_RECOGNITION,false);
+        isAutoRecg = getIntent().getBooleanExtra(KEY_AUTO_RECOGNITION, false);
 
         int maskType;
         switch (contentType) {
@@ -267,7 +268,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                     != PackageManager.PERMISSION_GRANTED) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     ActivityCompat.requestPermissions(CameraActivity.this,
-                            new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                             PERMISSIONS_EXTERNAL_STORAGE);
                     return;
                 }
@@ -330,12 +331,6 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                     if (cropMaskView.getMaskType() == MaskView.MASK_TYPE_NONE) {
                         cropView.setFilePath(outputFile.getAbsolutePath());
                         showCrop();
-                    } else if (cropMaskView.getMaskType() == MaskView.MASK_TYPE_BANK_CARD) {
-                        cropView.setFilePath(outputFile.getAbsolutePath());
-                        cropMaskView.setVisibility(View.INVISIBLE);
-                        overlayView.setVisibility(View.VISIBLE);
-                        overlayView.setTypeWide();
-                        showCrop();
                     } else {
                         displayImageView.setImageBitmap(bitmap);
                         showResultConfirm();
@@ -396,18 +391,18 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                     e.printStackTrace();
                 }
                 //可以在此上传应用并识别
-                if(isAutoRecg){
-                    if(CameraActivity.CONTENT_TYPE_ID_CARD_FRONT.equals(contentType)){
+                if (isAutoRecg) {
+                    if (CameraActivity.CONTENT_TYPE_ID_CARD_FRONT.equals(contentType)) {
                         //身份证正面
                         recIDCard(IDCardParams.ID_CARD_SIDE_FRONT, outputFile.getAbsolutePath());
-                    }else if(CameraActivity.CONTENT_TYPE_ID_CARD_BACK.equals(contentType)){
+                    } else if (CameraActivity.CONTENT_TYPE_ID_CARD_BACK.equals(contentType)) {
                         //身份证反面
                         recIDCard(IDCardParams.ID_CARD_SIDE_BACK, outputFile.getAbsolutePath());
-                    }else if(CameraActivity.CONTENT_TYPE_BANK_CARD.equals(contentType)){
+                    } else if (CameraActivity.CONTENT_TYPE_BANK_CARD.equals(contentType)) {
                         //银行卡识别
                         recBankCard(outputFile.getAbsolutePath());
                     }
-                }else{
+                } else {
                     Intent intent = new Intent();
                     intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, contentType);
                     setResult(Activity.RESULT_OK, intent);
@@ -439,7 +434,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         }
     };
 
-    private void recBankCard(String filePath){
+    private void recBankCard(String filePath) {
         BankCardParams param = new BankCardParams();
         param.setImageFile(new File(filePath));
         OCR.getInstance(this).recognizeBankCard(param, new OnResultListener<BankCardResult>() {
@@ -450,30 +445,30 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                         result.getValidDate(),
                         result.getBankCardType().name(),
                         result.getBankName());
-                Log.i("BANKCARD",res);
+                Log.i("BANKCARD", res);
                 ArrayList<String> listResult = new ArrayList();
-                listResult.add(result.getBankCardNumber().replaceAll(" ",""));
+                listResult.add(result.getBankCardNumber().replaceAll(" ", ""));
                 listResult.add(result.getBankName());
                 listResult.add("");
                 listResult.add("");
                 listResult.add(result.getBankCardType().name());
                 listResult.add("");
                 listResult.add(outputFile.getAbsolutePath());
-                setRecResult(res,listResult);
+                setRecResult(res, listResult);
             }
 
             @Override
             public void onError(OCRError error) {
                 hideRecgLoading();
-                Log.i("BANKCARD",error.getMessage());
-                Toast.makeText(CameraActivity.this,"银行卡识别失败：" + error.getMessage(),Toast.LENGTH_LONG).show();
+                Log.i("BANKCARD", error.getMessage());
+                Toast.makeText(CameraActivity.this, "银行卡识别失败：" + error.getMessage(), Toast.LENGTH_LONG).show();
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         cropView.setFilePath(null);
                         showTakePicture();
                     }
-                },1000);
+                }, 1000);
             }
         });
     }
@@ -492,9 +487,9 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
             @Override
             public void onResult(IDCardResult result) {
                 if (result != null) {
-                    Log.i("IDCARD",result.toString());
+                    Log.i("IDCARD", result.toString());
                     ArrayList<String> listResult = new ArrayList();
-                    if("front".equals(result.getIdCardSide())){
+                    if ("front".equals(result.getIdCardSide())) {
                         listResult.add(result.getName().getWords());
                         listResult.add(result.getGender().getWords());
                         listResult.add(result.getEthnic().getWords());
@@ -502,33 +497,33 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                         listResult.add(result.getAddress().getWords());
                         listResult.add(result.getIdNumber().getWords());
                         listResult.add(outputFile.getAbsolutePath());
-                    }else{
+                    } else {
                         listResult.add(result.getIssueAuthority().getWords());
-                        listResult.add(result.getSignDate().getWords() +"-"+ result.getExpiryDate().getWords());
+                        listResult.add(result.getSignDate().getWords() + "-" + result.getExpiryDate().getWords());
                         listResult.add(outputFile.getAbsolutePath());
                     }
 
-                    setRecResult(result.toString(),listResult);
+                    setRecResult(result.toString(), listResult);
                 }
             }
 
             @Override
             public void onError(OCRError error) {
                 hideRecgLoading();
-                Log.i("IDCARD",error.getMessage());
-                Toast.makeText(CameraActivity.this,"身份证识别失败：" + error.getMessage(),Toast.LENGTH_LONG).show();
+                Log.i("IDCARD", error.getMessage());
+                Toast.makeText(CameraActivity.this, "身份证识别失败：" + error.getMessage(), Toast.LENGTH_LONG).show();
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         cropView.setFilePath(null);
                         showTakePicture();
                     }
-                },1000);
+                }, 1000);
             }
         });
     }
 
-    private void setRecResult(String result, ArrayList<String> resultArr){
+    private void setRecResult(String result, ArrayList<String> resultArr) {
         hideRecgLoading();
         Intent intent = new Intent();
         intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, contentType);
@@ -556,7 +551,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         }
         return result;
     }
-    
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -627,7 +622,6 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
 
     /**
      * 做一些收尾工作
-     *
      */
     private void doClear() {
         CameraThreadPool.cancelAutoFocusTimer();
