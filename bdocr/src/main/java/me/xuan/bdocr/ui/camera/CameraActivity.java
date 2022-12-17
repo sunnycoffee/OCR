@@ -40,6 +40,7 @@ import me.xuan.bdocr.sdk.model.BankCardParams;
 import me.xuan.bdocr.sdk.model.BankCardResult;
 import me.xuan.bdocr.sdk.model.IDCardParams;
 import me.xuan.bdocr.sdk.model.IDCardResult;
+import me.xuan.bdocr.sdk.utils.ImageUtil;
 import me.xuan.bdocr.ui.crop.CropView;
 import me.xuan.bdocr.ui.crop.FrameOverlayView;
 
@@ -383,11 +384,9 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
             @Override
             public void run() {
                 try {
-                    FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
                     Bitmap bitmap = ((BitmapDrawable) displayImageView.getDrawable()).getBitmap();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
-                    fileOutputStream.close();
-                } catch (IOException e) {
+                    ImageUtil.compressImageToFile(bitmap, outputFile);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 //可以在此上传应用并识别
@@ -481,8 +480,9 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         // 设置方向检测
         param.setDetectDirection(true);
         // 设置图像参数压缩质量0-100, 越大图像质量越好但是请求时间越长。 不设置则默认值为20
-        param.setImageQuality(20);
-
+        param.setImageQuality(80);
+        // 获取剪裁后的图片
+        param.setDetectCard(true);
         OCR.getInstance(this).recognizeIDCard(param, new OnResultListener<IDCardResult>() {
             @Override
             public void onResult(IDCardResult result) {
@@ -496,10 +496,12 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                         listResult.add(result.getBirthday().getWords());
                         listResult.add(result.getAddress().getWords());
                         listResult.add(result.getIdNumber().getWords());
+                        ImageUtil.saveToFile(result.getCardImage(), outputFile.getAbsolutePath());
                         listResult.add(outputFile.getAbsolutePath());
                     } else {
                         listResult.add(result.getIssueAuthority().getWords());
                         listResult.add(result.getSignDate().getWords() + "-" + result.getExpiryDate().getWords());
+                        ImageUtil.saveToFile(result.getCardImage(), outputFile.getAbsolutePath());
                         listResult.add(outputFile.getAbsolutePath());
                     }
 
@@ -592,8 +594,14 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         if (requestCode == REQUEST_CODE_PICK_IMAGE) {
             if (resultCode == Activity.RESULT_OK) {
                 Uri uri = data.getData();
-                cropView.setFilePath(getRealPathFromURI(uri));
-                showCrop();
+                //银行卡使用剪裁框，身份证使用百度自动剪裁功能
+                if (CONTENT_TYPE_BANK_CARD.equals(contentType)) {
+                    cropView.setFilePath(getRealPathFromURI(uri));
+                    showCrop();
+                } else {
+                    displayImageView.setImageBitmap(ImageUtil.compressImage(this, getRealPathFromURI(uri)));
+                    showResultConfirm();
+                }
             } else {
                 cameraView.getCameraControl().resume();
             }

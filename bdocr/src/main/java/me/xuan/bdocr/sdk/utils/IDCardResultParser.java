@@ -38,6 +38,7 @@ public class IDCardResultParser implements Parser<IDCardResult> {
                 result.setWordsResultNumber(jsonObject.optInt("words_result_num"));
                 result.setRiskType(jsonObject.optString("risk_type"));
                 result.setImageStatus(jsonObject.optString("image_status"));
+                result.setCardImage(jsonObject.optString("card_image"));
                 JSONObject wordResult = jsonObject.optJSONObject("words_result");
                 if (TextUtils.isEmpty(this.idCardSide)) {
                     this.idCardSide = "front";

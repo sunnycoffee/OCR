@@ -23,6 +23,7 @@ public class IDCardResult extends ResponseResult {
     private Word signDate;
     private Word expiryDate;
     private Word issueAuthority;
+    private String cardImage;
 
     public IDCardResult() {
     }
@@ -129,6 +130,14 @@ public class IDCardResult extends ResponseResult {
 
     public void setRiskType(String riskType) {
         this.riskType = riskType;
+    }
+
+    public String getCardImage() {
+        return cardImage;
+    }
+
+    public void setCardImage(String cardImage) {
+        this.cardImage = cardImage;
     }
 
     public String getImageStatus() {

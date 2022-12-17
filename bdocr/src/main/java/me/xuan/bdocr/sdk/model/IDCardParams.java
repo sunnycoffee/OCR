@@ -18,6 +18,7 @@ public class IDCardParams implements RequestParams {
     private String idCardSide;
     private File imageFile;
     private int imageQuality = 20;
+    private boolean detectCard;
 
     public IDCardParams() {
     }
@@ -58,6 +59,14 @@ public class IDCardParams implements RequestParams {
         this.imageQuality = imageQuality;
     }
 
+    public boolean isDetectCard() {
+        return detectCard;
+    }
+
+    public void setDetectCard(boolean detectCard) {
+        this.detectCard = detectCard;
+    }
+
     public Map<String, File> getFileParams() {
         Map<String, File> fileMap = new HashMap();
         fileMap.put("image", this.imageFile);
@@ -79,6 +88,11 @@ public class IDCardParams implements RequestParams {
             stringMap.put("detect_risk", "false");
         }
 
+        if (this.detectCard) {
+            stringMap.put("detect_card", "true");
+        } else {
+            stringMap.put("detect_card", "false");
+        }
         return stringMap;
     }
 }
