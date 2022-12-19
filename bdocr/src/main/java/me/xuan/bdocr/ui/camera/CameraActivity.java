@@ -241,6 +241,8 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         takePictureContainer.setVisibility(View.INVISIBLE);
         confirmResultContainer.setVisibility(View.INVISIBLE);
         cropContainer.setVisibility(View.VISIBLE);
+        //剪裁图片滑动限制
+        cropView.setRestrictBound(cameraView.getMaskRect());
     }
 
     private void showResultConfirm() {
@@ -264,7 +266,6 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
     private View.OnClickListener albumButtonOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-
             if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {

@@ -1,5 +1,6 @@
 package me.coffee.support.ocr;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -97,11 +98,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != Activity.RESULT_OK) return;
         List<String> listResult = data.getStringArrayListExtra("listResult");
 
         StringBuffer sb = new StringBuffer();
         for (String item : listResult) {
-          sb.append(item).append(";");
+            sb.append(item).append(";");
         }
         TextView tv = findViewById(R.id.tv);
         tv.setText(sb.toString());

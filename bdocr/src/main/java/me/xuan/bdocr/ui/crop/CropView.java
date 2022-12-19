@@ -17,7 +17,9 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.WindowManager;
+
 import java.io.IOException;
+
 import me.xuan.bdocr.ui.util.ImageUtil;
 
 public class CropView extends View {
@@ -106,8 +108,8 @@ public class CropView extends View {
     public Bitmap crop(Rect frame) {
         float scale = getScale();
 
-        float[] src = new float[] {frame.left, frame.top};
-        float[] desc = new float[] {0, 0};
+        float[] src = new float[]{frame.left, frame.top};
+        float[] desc = new float[]{0, 0};
 
         Matrix invertedMatrix = new Matrix();
         this.matrix.invert(invertedMatrix);
@@ -232,8 +234,8 @@ public class CropView extends View {
         Rect bound = getRestrictedBound();
         if (bound != null) {
             float scale = getScale();
-            float right = left + (int) (bitmap.getWidth() / scale);
-            float bottom = top + (int) (bitmap.getHeight() / scale);
+            float right = left + (int) (bitmap.getWidth() * scale);
+            float bottom = top + (int) (bitmap.getHeight() * scale);
 
             if (left - distanceX > bound.left) {
                 distanceX = left - bound.left;
@@ -278,6 +280,8 @@ public class CropView extends View {
         float heightRatio = 1.0f * width / this.bitmap.getWidth();
 
         float ratio = Math.min(widthRatio, heightRatio);
+        updateMinScale();
+        ratio = Math.max(ratio, setMinimumScale);
 
         float dx = (width - this.bitmap.getWidth()) / 2;
         float dy = (height - this.bitmap.getHeight()) / 2;
@@ -319,5 +323,12 @@ public class CropView extends View {
 
     public void setRestrictBound(Rect rect) {
         this.restrictBound = rect;
+    }
+
+    private void updateMinScale() {
+        if (bitmap == null || restrictBound == null) return;
+        float wScale = 1f * restrictBound.width() / bitmap.getWidth();
+        float hScale = 1f * restrictBound.height() / bitmap.getHeight();
+        setMinimumScale = Math.max(wScale, hScale);
     }
 }
