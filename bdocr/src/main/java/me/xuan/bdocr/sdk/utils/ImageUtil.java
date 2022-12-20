@@ -139,6 +139,7 @@ public class ImageUtil {
     }
 
     public static void saveToFile(String base64, String outFilePath) {
+        if (base64 == null || base64.isEmpty()) return;
         byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
         Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         saveBitmap(bm, Bitmap.CompressFormat.JPEG, outFilePath);

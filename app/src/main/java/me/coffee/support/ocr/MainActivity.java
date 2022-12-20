@@ -4,9 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, CameraActivity.CONTENT_TYPE_ID_CARD_FRONT);
                 }
                 intent.putExtra(CameraActivity.KEY_AUTO_RECOGNITION, true);
+                intent.putExtra(CameraActivity.KEY_AUTO_CROP, false);//身份证是否使用自动剪裁
                 startActivityForResult(intent, requestCode);
             }
 

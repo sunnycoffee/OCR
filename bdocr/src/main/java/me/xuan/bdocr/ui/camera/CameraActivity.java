@@ -54,6 +54,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
     public static final String KEY_AUTO_RECOGNITION = "autorecogniton";
     public static final String KEY_REC_RESULT = "recresult";
     public static final String KEY_REC_RESULT_ES = "listResult";
+    public static final String KEY_AUTO_CROP = "autoCrop";
 
     public static final String CONTENT_TYPE_GENERAL = "general";
     public static final String CONTENT_TYPE_ID_CARD_FRONT = "IDCardFront";
@@ -73,6 +74,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
     private boolean isNativeEnable;
     private boolean isNativeManual;
     private boolean isAutoRecg;
+    private boolean isAutoCrop;
 
     private OCRCameraLayout takePictureContainer;
     private OCRCameraLayout cropContainer;
@@ -174,6 +176,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         }
 
         isAutoRecg = getIntent().getBooleanExtra(KEY_AUTO_RECOGNITION, false);
+        isAutoCrop = getIntent().getBooleanExtra(KEY_AUTO_CROP, false);
 
         int maskType;
         switch (contentType) {
@@ -483,7 +486,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         // 设置图像参数压缩质量0-100, 越大图像质量越好但是请求时间越长。 不设置则默认值为20
         param.setImageQuality(80);
         // 获取剪裁后的图片
-        param.setDetectCard(true);
+        param.setDetectCard(isAutoCrop);
         OCR.getInstance(this).recognizeIDCard(param, new OnResultListener<IDCardResult>() {
             @Override
             public void onResult(IDCardResult result) {
@@ -595,8 +598,8 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         if (requestCode == REQUEST_CODE_PICK_IMAGE) {
             if (resultCode == Activity.RESULT_OK) {
                 Uri uri = data.getData();
-                //银行卡使用剪裁框，身份证使用百度自动剪裁功能
-                if (CONTENT_TYPE_BANK_CARD.equals(contentType)) {
+                //银行卡使用剪裁框，身份证根据配置使用剪裁框or自动剪裁
+                if (CONTENT_TYPE_BANK_CARD.equals(contentType) || !isAutoCrop) {
                     cropView.setFilePath(getRealPathFromURI(uri));
                     showCrop();
                 } else {
