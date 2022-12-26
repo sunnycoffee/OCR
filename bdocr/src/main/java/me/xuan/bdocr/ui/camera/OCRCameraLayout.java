@@ -10,8 +10,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
 import me.xuan.bdocr.R;
 
 
@@ -25,11 +28,17 @@ public class OCRCameraLayout extends FrameLayout {
     private View centerView;
     private View leftDownView;
     private View rightUpView;
+    private View idCardExamView;
+    private View idCardBackExamView;
+    private View bankCardExamView;
 
     private int contentViewId;
     private int centerViewId;
     private int leftDownViewId;
     private int rightUpViewId;
+    private int idCardExamViewId;
+    private int idCardBackExamViewId;
+    private int bankCardExamViewId;
 
     public void setOrientation(int orientation) {
         if (this.orientation == orientation) {
@@ -67,6 +76,9 @@ public class OCRCameraLayout extends FrameLayout {
             centerViewId = a.getResourceId(R.styleable.OCRCameraLayout_centerView, -1);
             leftDownViewId = a.getResourceId(R.styleable.OCRCameraLayout_leftDownView, -1);
             rightUpViewId = a.getResourceId(R.styleable.OCRCameraLayout_rightUpView, -1);
+            idCardExamViewId = a.getResourceId(R.styleable.OCRCameraLayout_idCardExamView, -1);
+            idCardBackExamViewId = a.getResourceId(R.styleable.OCRCameraLayout_idCardBackExamView, -1);
+            bankCardExamViewId = a.getResourceId(R.styleable.OCRCameraLayout_bankCardExamView, -1);
         } finally {
             a.recycle();
         }
@@ -81,6 +93,9 @@ public class OCRCameraLayout extends FrameLayout {
         }
         leftDownView = findViewById(leftDownViewId);
         rightUpView = findViewById(rightUpViewId);
+        idCardExamView = findViewById(idCardExamViewId);
+        idCardBackExamView = findViewById(idCardBackExamViewId);
+        bankCardExamView = findViewById(bankCardExamViewId);
     }
 
     private Rect backgroundRect = new Rect();
@@ -98,8 +113,8 @@ public class OCRCameraLayout extends FrameLayout {
         int left;
         int top;
 
-        MarginLayoutParams leftDownViewLayoutParams = (MarginLayoutParams) leftDownView.getLayoutParams();
-        MarginLayoutParams rightUpViewLayoutParams = (MarginLayoutParams) rightUpView.getLayoutParams();
+        ViewGroup.MarginLayoutParams leftDownViewLayoutParams = (MarginLayoutParams) leftDownView.getLayoutParams();
+        ViewGroup.MarginLayoutParams rightUpViewLayoutParams = (MarginLayoutParams) rightUpView.getLayoutParams();
         if (r < b) {
             int contentHeight = width * 4 / 3;
             int heightLeft = height - contentHeight;
@@ -109,6 +124,46 @@ public class OCRCameraLayout extends FrameLayout {
             backgroundRect.top = contentHeight;
             backgroundRect.right = width;
             backgroundRect.bottom = height;
+
+
+            if (idCardExamView != null && idCardExamView.getVisibility() == View.VISIBLE) {
+                int examHeight = idCardExamView.getMeasuredHeight();
+                int reserved = applyUnit(TypedValue.COMPLEX_UNIT_DIP, 66f);
+                int offset = height - contentHeight - examHeight - reserved;
+                if (offset < 0) {
+                    contentHeight += offset;
+                }
+                idCardExamView.layout(l, contentHeight, r, contentHeight + examHeight);
+                contentHeight += examHeight;
+
+                heightLeft = height - contentHeight;
+            }
+
+            if (idCardBackExamView != null && idCardBackExamView.getVisibility() == View.VISIBLE) {
+                int examHeight = idCardBackExamView.getMeasuredHeight();
+                int reserved = applyUnit(TypedValue.COMPLEX_UNIT_DIP, 66f);
+                int offset = height - contentHeight - examHeight - reserved;
+                if (offset < 0) {
+                    contentHeight += offset;
+                }
+                idCardBackExamView.layout(l, contentHeight, r, contentHeight + examHeight);
+                contentHeight += examHeight;
+
+                heightLeft = height - contentHeight;
+            }
+
+            if (bankCardExamView != null && bankCardExamView.getVisibility() == View.VISIBLE) {
+                int examHeight = bankCardExamView.getMeasuredHeight();
+                int reserved = applyUnit(TypedValue.COMPLEX_UNIT_DIP, 66f);
+                int offset = height - contentHeight - examHeight - reserved;
+                if (offset < 0) {
+                    contentHeight += offset;
+                }
+                bankCardExamView.layout(l, contentHeight, r, contentHeight + examHeight);
+                contentHeight += examHeight;
+
+                heightLeft = height - contentHeight;
+            }
 
             // layout centerView;
             if (centerView != null) {
@@ -161,5 +216,9 @@ public class OCRCameraLayout extends FrameLayout {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawRect(backgroundRect, paint);
+    }
+
+    private int applyUnit(int unit, float value) {
+        return (int) TypedValue.applyDimension(unit, value, getResources().getDisplayMetrics());
     }
 }

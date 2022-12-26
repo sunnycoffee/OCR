@@ -34,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.idcard_btn).setOnClickListener(v -> {
             startBdIdCardOcr(false, 200);
         });
+        findViewById(R.id.idcard_back_btn).setOnClickListener(v -> {
+            startBdIdCardOcr(true, 201);
+        });
     }
 
     public void startBdBankCardOcr(int requestCode) {
@@ -75,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, CameraActivity.CONTENT_TYPE_ID_CARD_FRONT);
                 }
                 intent.putExtra(CameraActivity.KEY_AUTO_RECOGNITION, true);
-                intent.putExtra(CameraActivity.KEY_AUTO_CROP, false);//身份证是否使用自动剪裁
+                intent.putExtra(CameraActivity.KEY_AUTO_CROP, true);//身份证是否使用自动剪裁
                 startActivityForResult(intent, requestCode);
             }
 

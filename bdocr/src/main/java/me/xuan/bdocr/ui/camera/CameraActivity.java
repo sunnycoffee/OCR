@@ -131,6 +131,27 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         initParams();
 
         cameraView.setAutoPictureCallback(autoTakePictureCallback);
+
+        View idCardExamView = (View) findViewById(R.id.id_card_exam_container);
+        View idCardBackExamView = (View) findViewById(R.id.id_card_back_exam_container);
+        View bankCardExamView = (View) findViewById(R.id.bank_card_exam_container);
+        if (contentType.equals(CONTENT_TYPE_ID_CARD_FRONT)) {
+            idCardExamView.setVisibility(View.VISIBLE);
+        } else {
+            idCardExamView.setVisibility(View.GONE);
+        }
+
+        if (contentType.equals(CONTENT_TYPE_ID_CARD_BACK)) {
+            idCardBackExamView.setVisibility(View.VISIBLE);
+        } else {
+            idCardBackExamView.setVisibility(View.GONE);
+        }
+
+        if (contentType.equals(CONTENT_TYPE_BANK_CARD)) {
+            bankCardExamView.setVisibility(View.VISIBLE);
+        } else {
+            bankCardExamView.setVisibility(View.GONE);
+        }
     }
 
     @Override
