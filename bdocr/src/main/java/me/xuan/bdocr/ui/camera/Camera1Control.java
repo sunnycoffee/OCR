@@ -437,8 +437,8 @@ public class Camera1Control implements ICameraControl {
     }
 
     private Camera.Size getOptimalSize(List<Camera.Size> sizes) {
-        int width = previewView.textureView.getWidth();
-        int height = previewView.textureView.getHeight();
+        int width = previewView.getWidth();
+        int height = previewView.getHeight();
         Camera.Size pictureSize = sizes.get(0);
 
         List<Camera.Size> candidates = new ArrayList<>();
