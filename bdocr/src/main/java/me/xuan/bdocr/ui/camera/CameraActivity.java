@@ -55,13 +55,12 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
     public static final String KEY_REC_RESULT = "recresult";
     public static final String KEY_REC_RESULT_ES = "listResult";
     public static final String KEY_AUTO_CROP = "autoCrop";
+    public static final String KEY_SHOW_EXAMPLE = "showExample";
 
     public static final String CONTENT_TYPE_GENERAL = "general";
     public static final String CONTENT_TYPE_ID_CARD_FRONT = "IDCardFront";
     public static final String CONTENT_TYPE_ID_CARD_BACK = "IDCardBack";
     public static final String CONTENT_TYPE_BANK_CARD = "bankCard";
-    public static final String CONTENT_TYPE_PASSPORT = "passport";
-
 
     private static final int REQUEST_CODE_PICK_IMAGE = 100;
     private static final int PERMISSIONS_REQUEST_CAMERA = 800;
@@ -75,6 +74,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
     private boolean isNativeManual;
     private boolean isAutoRecg;
     private boolean isAutoCrop;
+    private boolean isShowExample;
 
     private OCRCameraLayout takePictureContainer;
     private OCRCameraLayout cropContainer;
@@ -96,6 +96,14 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         }
     };
 
+    public static void start(Activity context, String contentType, String outFilePath, boolean autoRecognition, boolean showExample, int requestCode) {
+        Intent starter = new Intent(context, CameraActivity.class);
+        starter.putExtra(KEY_CONTENT_TYPE, contentType);
+        starter.putExtra(KEY_OUTPUT_FILE_PATH, outFilePath);
+        starter.putExtra(KEY_AUTO_RECOGNITION, autoRecognition);
+        starter.putExtra(KEY_SHOW_EXAMPLE, showExample);
+        context.startActivityForResult(starter, requestCode);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,19 +143,19 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         View idCardExamView = (View) findViewById(R.id.id_card_exam_container);
         View idCardBackExamView = (View) findViewById(R.id.id_card_back_exam_container);
         View bankCardExamView = (View) findViewById(R.id.bank_card_exam_container);
-        if (contentType.equals(CONTENT_TYPE_ID_CARD_FRONT)) {
+        if (contentType.equals(CONTENT_TYPE_ID_CARD_FRONT) && isShowExample) {
             idCardExamView.setVisibility(View.VISIBLE);
         } else {
             idCardExamView.setVisibility(View.GONE);
         }
 
-        if (contentType.equals(CONTENT_TYPE_ID_CARD_BACK)) {
+        if (contentType.equals(CONTENT_TYPE_ID_CARD_BACK) && isShowExample) {
             idCardBackExamView.setVisibility(View.VISIBLE);
         } else {
             idCardBackExamView.setVisibility(View.GONE);
         }
 
-        if (contentType.equals(CONTENT_TYPE_BANK_CARD)) {
+        if (contentType.equals(CONTENT_TYPE_BANK_CARD) && isShowExample) {
             bankCardExamView.setVisibility(View.VISIBLE);
         } else {
             bankCardExamView.setVisibility(View.GONE);
@@ -198,57 +206,11 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
 
         isAutoRecg = getIntent().getBooleanExtra(KEY_AUTO_RECOGNITION, false);
         isAutoCrop = getIntent().getBooleanExtra(KEY_AUTO_CROP, false);
+        isShowExample = getIntent().getBooleanExtra(KEY_SHOW_EXAMPLE, true);
 
-        int maskType;
-        switch (contentType) {
-            case CONTENT_TYPE_ID_CARD_FRONT:
-                maskType = MaskView.MASK_TYPE_ID_CARD_FRONT;
-                overlayView.setVisibility(View.INVISIBLE);
-                if (isNativeEnable) {
-                    takePhotoBtn.setVisibility(View.INVISIBLE);
-                }
-                break;
-            case CONTENT_TYPE_ID_CARD_BACK:
-                maskType = MaskView.MASK_TYPE_ID_CARD_BACK;
-                overlayView.setVisibility(View.INVISIBLE);
-                if (isNativeEnable) {
-                    takePhotoBtn.setVisibility(View.INVISIBLE);
-                }
-                break;
-            case CONTENT_TYPE_BANK_CARD:
-                maskType = MaskView.MASK_TYPE_BANK_CARD;
-                overlayView.setVisibility(View.INVISIBLE);
-                break;
-            case CONTENT_TYPE_PASSPORT:
-                maskType = MaskView.MASK_TYPE_PASSPORT;
-                overlayView.setVisibility(View.INVISIBLE);
-                break;
-            case CONTENT_TYPE_GENERAL:
-            default:
-                maskType = MaskView.MASK_TYPE_NONE;
-                cropMaskView.setVisibility(View.INVISIBLE);
-                break;
-        }
-
-        //身份证本地能力初始化
-//        if (maskType == MaskView.MASK_TYPE_ID_CARD_FRONT || maskType == MaskView.MASK_TYPE_ID_CARD_BACK) {
-//            if (isNativeEnable && !isNativeManual) {
-//                initNative(token);
-//            }
-//        }
-//        cameraView.setEnableScan(isNativeEnable);
-        cameraView.setMaskType(maskType, this);
-        cropMaskView.setMaskType(maskType);
-    }
-
-    private void initNative(final String token) {
-//        CameraNativeHelper.init(CameraActivity.this, token,
-//                new CameraNativeHelper.CameraNativeInitCallback() {
-//            @Override
-//            public void onError(int errorCode, Throwable e) {
-//                cameraView.setInitNativeStatus(errorCode);
-//            }
-//        });
+        cropMaskView.setVisibility(View.INVISIBLE);
+        cameraView.setMaskType(MaskView.MASK_TYPE_NONE, this);
+        cropMaskView.setMaskType(MaskView.MASK_TYPE_NONE);
     }
 
     private void showTakePicture() {
@@ -354,13 +316,8 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                 @Override
                 public void run() {
                     takePictureContainer.setVisibility(View.INVISIBLE);
-                    if (cropMaskView.getMaskType() == MaskView.MASK_TYPE_NONE) {
-                        cropView.setFilePath(outputFile.getAbsolutePath());
-                        showCrop();
-                    } else {
-                        displayImageView.setImageBitmap(bitmap);
-                        showResultConfirm();
-                    }
+                    displayImageView.setImageBitmap(bitmap);
+                    showResultConfirm();
                 }
             });
         }
@@ -429,6 +386,8 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                 } else {
                     Intent intent = new Intent();
                     intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, contentType);
+                    intent.putExtra(CameraActivity.KEY_AUTO_RECOGNITION, false);
+                    intent.putExtra(CameraActivity.KEY_OUTPUT_FILE_PATH, outputFile.getAbsolutePath());
                     setResult(Activity.RESULT_OK, intent);
                     finish();
                 }
@@ -554,7 +513,9 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         hideRecgLoading();
         Intent intent = new Intent();
         intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, contentType);
+        intent.putExtra(CameraActivity.KEY_OUTPUT_FILE_PATH, outputFile.getAbsolutePath());
         intent.putExtra(CameraActivity.KEY_REC_RESULT, result);
+        intent.putExtra(CameraActivity.KEY_AUTO_RECOGNITION, true);
         intent.putStringArrayListExtra(CameraActivity.KEY_REC_RESULT_ES, resultArr);
         setResult(Activity.RESULT_OK, intent);
         CameraActivity.this.finish();
@@ -619,14 +580,8 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         if (requestCode == REQUEST_CODE_PICK_IMAGE) {
             if (resultCode == Activity.RESULT_OK) {
                 Uri uri = data.getData();
-                //银行卡使用剪裁框，身份证根据配置使用剪裁框or自动剪裁
-                if (CONTENT_TYPE_BANK_CARD.equals(contentType) || !isAutoCrop) {
-                    cropView.setFilePath(getRealPathFromURI(uri));
-                    showCrop();
-                } else {
-                    displayImageView.setImageBitmap(ImageUtil.compressImage(this, getRealPathFromURI(uri)));
-                    showResultConfirm();
-                }
+                displayImageView.setImageBitmap(ImageUtil.compressImage(this, getRealPathFromURI(uri)));
+                showResultConfirm();
             } else {
                 cameraView.getCameraControl().resume();
             }

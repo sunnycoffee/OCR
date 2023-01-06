@@ -23,10 +23,14 @@ import me.xuan.bdocr.ui.camera.CameraActivity;
 
 public class MainActivity extends AppCompatActivity {
 
+    private TextView resultTv;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        resultTv = findViewById(R.id.tv);
 
         findViewById(R.id.bank_btn).setOnClickListener(v -> {
             startBdBankCardOcr(100);
@@ -47,11 +51,12 @@ public class MainActivity extends AppCompatActivity {
                 String token = result.getAccessToken();
                 Log.i("ocr", "百度OCR初始化成功，access_token: " + token);
                 //开始启动OCR
-                Intent intent = new Intent(MainActivity.this, CameraActivity.class);
-                intent.putExtra(CameraActivity.KEY_OUTPUT_FILE_PATH, FileUtil.getSaveBankCardFile(getApplication()).getAbsolutePath());
-                intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, CameraActivity.CONTENT_TYPE_BANK_CARD);
-                intent.putExtra(CameraActivity.KEY_AUTO_RECOGNITION, true);
-                startActivityForResult(intent, requestCode);
+                CameraActivity.start(MainActivity.this,
+                        CameraActivity.CONTENT_TYPE_BANK_CARD,
+                        FileUtil.getSaveBankCardFile(getApplication()).getAbsolutePath(),
+                        false,
+                        true,
+                        requestCode);
             }
 
             @Override
@@ -67,19 +72,21 @@ public class MainActivity extends AppCompatActivity {
         initAccessTokenWithAkSk(new OnResultListener<AccessToken>() {
             @Override
             public void onResult(AccessToken result) {
-                String token = result.getAccessToken();
-                //开始启动OCR
-                Intent intent = new Intent(MainActivity.this, CameraActivity.class);
                 if (isBackSide) {
-                    intent.putExtra(CameraActivity.KEY_OUTPUT_FILE_PATH, FileUtil.getSaveIdCardFrontFile(getApplicationContext()).getAbsolutePath());
-                    intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, CameraActivity.CONTENT_TYPE_ID_CARD_BACK);
+                    CameraActivity.start(MainActivity.this,
+                            CameraActivity.CONTENT_TYPE_ID_CARD_BACK,
+                            FileUtil.getSaveIdCardFrontFile(getApplicationContext()).getAbsolutePath(),
+                            false,
+                            false,
+                            requestCode);
                 } else {
-                    intent.putExtra(CameraActivity.KEY_OUTPUT_FILE_PATH, FileUtil.getSaveIdCardBackFile(getApplicationContext()).getAbsolutePath());
-                    intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, CameraActivity.CONTENT_TYPE_ID_CARD_FRONT);
+                    CameraActivity.start(MainActivity.this,
+                            CameraActivity.CONTENT_TYPE_ID_CARD_FRONT,
+                            FileUtil.getSaveIdCardFrontFile(getApplicationContext()).getAbsolutePath(),
+                            false,
+                            true,
+                            requestCode);
                 }
-                intent.putExtra(CameraActivity.KEY_AUTO_RECOGNITION, true);
-                intent.putExtra(CameraActivity.KEY_AUTO_CROP, true);//身份证是否使用自动剪裁
-                startActivityForResult(intent, requestCode);
             }
 
             @Override
@@ -102,19 +109,24 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != Activity.RESULT_OK) return;
-        List<String> listResult = data.getStringArrayListExtra("listResult");
+        if (resultCode != Activity.RESULT_OK || data == null) return;
+        final boolean recognition = data.getBooleanExtra(CameraActivity.KEY_AUTO_RECOGNITION, false);
+        final String path = data.getStringExtra(CameraActivity.KEY_OUTPUT_FILE_PATH);
 
-        StringBuffer sb = new StringBuffer();
-        for (String item : listResult) {
-            sb.append(item).append(";");
-        }
-        TextView tv = findViewById(R.id.tv);
-        tv.setText(sb.toString());
-
-        String path = listResult.get(6);
         Bitmap bm = BitmapFactory.decodeFile(path);
         ImageView iv = findViewById(R.id.iv);
         iv.setImageBitmap(bm);
+
+        if (recognition) {
+            List<String> listResult = data.getStringArrayListExtra(CameraActivity.KEY_REC_RESULT_ES);
+            if (listResult == null || listResult.isEmpty()) return;
+            StringBuilder sb = new StringBuilder();
+            for (String item : listResult) {
+                sb.append(item).append(";");
+            }
+            resultTv.setText(sb.toString());
+        } else {
+            resultTv.setText(null);
+        }
     }
 }
