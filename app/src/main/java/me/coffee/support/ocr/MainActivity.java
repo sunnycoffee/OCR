@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import me.xuan.bdocr.FileUtil;
@@ -81,11 +82,18 @@ public class MainActivity extends AppCompatActivity {
                             requestCode);
                 } else {
                     CameraActivity.start(MainActivity.this,
+                            null,
                             CameraActivity.CONTENT_TYPE_ID_CARD_FRONT,
                             FileUtil.getSaveIdCardFrontFile(getApplicationContext()).getAbsolutePath(),
                             false,
                             true,
-                            requestCode);
+                            requestCode, (activity, type, path) -> {
+                                ArrayList<String> list = new ArrayList<>();
+                                list.add("张三");
+                                list.add("男");
+                                list.add("汉");
+                                activity.setRecResult(null, list);
+                            });
                 }
             }
 
@@ -113,9 +121,11 @@ public class MainActivity extends AppCompatActivity {
         final boolean recognition = data.getBooleanExtra(CameraActivity.KEY_AUTO_RECOGNITION, false);
         final String path = data.getStringExtra(CameraActivity.KEY_OUTPUT_FILE_PATH);
 
-        Bitmap bm = BitmapFactory.decodeFile(path);
-        ImageView iv = findViewById(R.id.iv);
-        iv.setImageBitmap(bm);
+        if (path != null) {
+            Bitmap bm = BitmapFactory.decodeFile(path);
+            ImageView iv = findViewById(R.id.iv);
+            iv.setImageBitmap(bm);
+        }
 
         if (recognition) {
             List<String> listResult = data.getStringArrayListExtra(CameraActivity.KEY_REC_RESULT_ES);

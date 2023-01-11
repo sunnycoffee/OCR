@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import me.xuan.bdocr.OcrInterceptor;
 import me.xuan.bdocr.R;
 import me.xuan.bdocr.ShowLoadingInterface;
 import me.xuan.bdocr.sdk.OCR;
@@ -95,9 +96,20 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
             return false;
         }
     };
+    protected static OcrInterceptor mOcrInterceptor;
 
     public static void start(Activity context, String contentType, String outFilePath, boolean autoRecognition, boolean showExample, int requestCode) {
-        Intent starter = new Intent(context, CameraActivity.class);
+        start(context, null, contentType, outFilePath, autoRecognition, showExample, requestCode, null);
+    }
+
+    public static void start(Activity context, Class<? extends CameraActivity> target, String contentType, String outFilePath, boolean autoRecognition, boolean showExample, int requestCode) {
+        start(context, target, contentType, outFilePath, autoRecognition, showExample, requestCode, null);
+    }
+
+    public static void start(Activity context, Class<? extends CameraActivity> target, String contentType, String outFilePath, boolean autoRecognition, boolean showExample, int requestCode, OcrInterceptor ocrInterceptor) {
+        mOcrInterceptor = ocrInterceptor;
+        if (target == null) target = CameraActivity.class;
+        Intent starter = new Intent(context, target);
         starter.putExtra(KEY_CONTENT_TYPE, contentType);
         starter.putExtra(KEY_OUTPUT_FILE_PATH, outFilePath);
         starter.putExtra(KEY_AUTO_RECOGNITION, autoRecognition);
@@ -205,12 +217,44 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         }
 
         isAutoRecg = getIntent().getBooleanExtra(KEY_AUTO_RECOGNITION, false);
-        isAutoCrop = getIntent().getBooleanExtra(KEY_AUTO_CROP, false);
+        isAutoCrop = getIntent().getBooleanExtra(KEY_AUTO_CROP, true);
         isShowExample = getIntent().getBooleanExtra(KEY_SHOW_EXAMPLE, true);
 
-        cropMaskView.setVisibility(View.INVISIBLE);
-        cameraView.setMaskType(MaskView.MASK_TYPE_NONE, this);
-        cropMaskView.setMaskType(MaskView.MASK_TYPE_NONE);
+        if (mOcrInterceptor == null) {
+            int maskType;
+            switch (contentType) {
+                case CONTENT_TYPE_ID_CARD_FRONT:
+                    maskType = MaskView.MASK_TYPE_ID_CARD_FRONT;
+                    overlayView.setVisibility(View.INVISIBLE);
+                    if (isNativeEnable) {
+                        takePhotoBtn.setVisibility(View.INVISIBLE);
+                    }
+                    break;
+                case CONTENT_TYPE_ID_CARD_BACK:
+                    maskType = MaskView.MASK_TYPE_ID_CARD_BACK;
+                    overlayView.setVisibility(View.INVISIBLE);
+                    if (isNativeEnable) {
+                        takePhotoBtn.setVisibility(View.INVISIBLE);
+                    }
+                    break;
+                case CONTENT_TYPE_BANK_CARD:
+                    maskType = MaskView.MASK_TYPE_BANK_CARD;
+                    overlayView.setVisibility(View.INVISIBLE);
+                    break;
+                case CONTENT_TYPE_GENERAL:
+                default:
+                    maskType = MaskView.MASK_TYPE_NONE;
+                    cropMaskView.setVisibility(View.INVISIBLE);
+                    break;
+            }
+
+            cameraView.setMaskType(maskType, this);
+            cropMaskView.setMaskType(maskType);
+        } else {
+            cropMaskView.setVisibility(View.INVISIBLE);
+            cameraView.setMaskType(MaskView.MASK_TYPE_NONE, this);
+            cropMaskView.setMaskType(MaskView.MASK_TYPE_NONE);
+        }
     }
 
     private void showTakePicture() {
@@ -383,6 +427,8 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
                         //银行卡识别
                         recBankCard(outputFile.getAbsolutePath());
                     }
+                } else if (mOcrInterceptor != null) {
+                    mOcrInterceptor.onRecognition(CameraActivity.this, contentType, outputFile.getAbsolutePath());
                 } else {
                     Intent intent = new Intent();
                     intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, contentType);
@@ -442,6 +488,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
 
             @Override
             public void onError(OCRError error) {
+                mOcrInterceptor = null;
                 hideRecgLoading();
                 Log.i("BANKCARD", error.getMessage());
                 Toast.makeText(CameraActivity.this, "银行卡识别失败：" + error.getMessage(), Toast.LENGTH_LONG).show();
@@ -495,6 +542,7 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
 
             @Override
             public void onError(OCRError error) {
+                mOcrInterceptor = null;
                 hideRecgLoading();
                 Log.i("IDCARD", error.getMessage());
                 Toast.makeText(CameraActivity.this, "身份证识别失败：" + error.getMessage(), Toast.LENGTH_LONG).show();
@@ -509,7 +557,8 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         });
     }
 
-    private void setRecResult(String result, ArrayList<String> resultArr) {
+    public void setRecResult(String result, ArrayList<String> resultArr) {
+        mOcrInterceptor = null;
         hideRecgLoading();
         Intent intent = new Intent();
         intent.putExtra(CameraActivity.KEY_CONTENT_TYPE, contentType);
@@ -580,8 +629,14 @@ public class CameraActivity extends FragmentActivity implements ShowLoadingInter
         if (requestCode == REQUEST_CODE_PICK_IMAGE) {
             if (resultCode == Activity.RESULT_OK) {
                 Uri uri = data.getData();
-                displayImageView.setImageBitmap(ImageUtil.compressImage(this, getRealPathFromURI(uri)));
-                showResultConfirm();
+                //银行卡默认使用剪裁框（拦截处理的情况除外）
+                if (CONTENT_TYPE_BANK_CARD.equals(contentType) && mOcrInterceptor == null) {
+                    cropView.setFilePath(getRealPathFromURI(uri));
+                    showCrop();
+                } else {
+                    displayImageView.setImageBitmap(ImageUtil.compressImage(this, getRealPathFromURI(uri)));
+                    showResultConfirm();
+                }
             } else {
                 cameraView.getCameraControl().resume();
             }
